@@ -296,6 +296,7 @@ Angka berikut merupakan baseline awal yang perlu diuji memakai validation.
 | Horizontal flip | 0.5 | Variasi posisi tanpa perubahan warna |
 | Random seed | 42 | Nilai tetap untuk membandingkan eksperimen |
 | DataLoader workers | 0 | Awal sederhana dan mudah ditelusuri pada Windows |
+| Pinned memory | False | Menghindari kegagalan pemetaan memori pada Windows; model tetap menggunakan CUDA |
 
 Parameter tersebut bukan hasil tuning dataset Anda. Tuning learning rate,
 epoch, dan threshold memakai validation, kemudian pengaturan dikunci sebelum
@@ -455,6 +456,7 @@ mudah menjelaskan implementasi saat sidang.
 | `RUN_WINDOWS.bat` | Memanggil script PowerShell dari root proyek | Argumen pengguna | Satu perintah untuk menjalankan workflow |
 | `requirements.txt` | Versi dependensi yang digunakan | Dibaca installer Python | Library yang konsisten |
 | `tests/test_*.py` | Verifikasi perilaku loader, transformasi, model, metrik, prediksi/training | Fixture sintetis | Hasil pengujian, bukan performa kakao |
+| `tests/test_memory_transfer.py` | Regresi DataLoader dengan kegagalan pinned-memory yang disimulasikan | Tensor CPU dan ketersediaan CUDA simulasi | Semua sampel dipertahankan tanpa memanggil allocator bila pinning dimatikan |
 | `.gitignore` / `.gitkeep` | Mengecualikan data/hasil besar dan mempertahankan folder | Pola path | Struktur proyek untuk Git |
 | `README.md` | Cara menjalankan, konsep model, dan batas hasil | Dibaca pengguna | Panduan kerja |
 | `PENJELASAN_KODE.md` | Fungsi, source, input/output, dan bagian penting kode | Source implementasi | Bahan belajar mahasiswa |
@@ -493,7 +495,18 @@ dan interpreter VS Code, lalu ulangi self-test. Jika prediksi belum menampilkan
 biji, periksa kualitas checkpoint dan threshold; jangan menafsirkan tidak adanya
 deteksi sebagai bukti bahwa tidak ada biji.
 
-Untuk menjalankan pengujian program:
+Jika training berhenti dengan `CUDA error: resource already mapped` saat
+`DataLoader` memanggil `.pin_memory()`, gunakan `PIN_MEMORY = False` di
+`config.py`. Pengaturan ini berlaku pada kedua loader dan tidak mengubah
+perangkat model: forward/backward tetap menggunakan CUDA. Pinned memory
+hanya optimasi transfer dari CPU; flag ini tidak menjadi bagian syarat
+hyperparameter resume, sehingga checkpoint sebelumnya tetap kompatibel.
+Restart proses Python setelah error, lalu lanjutkan checkpoint run yang sama
+jika sudah ada `last_model.pth`, atau mulai pada folder eksperimen baru.
+Peringatan TorchMetrics tentang lebih dari 100 deteksi adalah pesan terpisah
+tentang batas pelaporan COCO, bukan error pemetaan memori ini.
+
+Pengujian software:
 
 ```powershell
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v

@@ -45,3 +45,23 @@ Jalankan RUN_WINDOWS.bat lokal untuk membuktikan kesiapan perangkat Anda.
 Dataset kakao asli berada pada komputer Anda dan belum diperiksa di sini.
 Belum ada klaim performa penelitian, mAP kakao, atau bobot hasil penelitian.
 Angka penelitian akan dihasilkan dari train/validation/test nyata lokal.
+
+## Perbaikan transfer memori — 13 Oktober 2026
+
+Default `PIN_MEMORY = False` sekarang berlaku untuk DataLoader train dan
+validation. Perubahan ini menghindari alokasi pinned memory yang gagal pada
+traceback Windows `CUDA error: resource already mapped`. Pemindahan tensor
+dan model ke GPU tetap dilakukan melalui `.to(device)`; pilihan CUDA tetap
+dipertahankan. Flag ini tidak dimasukkan ke syarat hyperparameter resume.
+
+Suite terbaru: **36 pengujian lulus, 0 gagal, 0 skipped**. Tiga pengujian baru
+memakai DataLoader sesungguhnya, mensimulasikan tersedianya CUDA, dan memaksa
+allocator `.pin_memory()` gagal. Pinning mati tetap menghasilkan semua lima
+sampel termasuk batch terakhir satu gambar; pinning aktif mereproduksi
+kegagalan yang disuntikkan. CPU melewati pinning meskipun flag diaktifkan.
+
+Smoke pretrained CPU juga lulus kembali: training, evaluasi, prediksi,
+penyimpanan/restore checkpoint dan kesetaraan resume. Ini menguji software
+dan penanganan jalur alokasi memori; CUDA/driver Windows fisik belum diuji
+di cloud. Keberhasilan pada mesin pengguna perlu dibuktikan melalui retry
+setelah perbaikan.

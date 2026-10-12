@@ -46,6 +46,7 @@ WEIGHT_DECAY = 0.0005
 BATCH_SIZE = 4  # Batch > 1 membantu BatchNorm; sesuaikan dengan memori.
 NUM_EPOCHS = 30  # Anggaran awal, bukan jaminan konvergensi.
 NUM_WORKERS = 0  # Mudah ditelusuri dan aman pada CPU/cloud/notebook.
+PIN_MEMORY = False  # Stabil pada Windows CUDA; transfer ke GPU tetap memakai .to(device).
 CPU_NUM_THREADS = 4  # Hindari thread berlebihan pada mesin CPU.
 DETERMINISTIC = True  # Mengurangi sumber variasi; lintas perangkat tetap bisa berbeda.
 

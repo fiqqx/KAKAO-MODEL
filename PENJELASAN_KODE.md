@@ -63,6 +63,7 @@ WEIGHT_DECAY = 0.0005
 BATCH_SIZE = 4  # Batch > 1 membantu BatchNorm; sesuaikan dengan memori.
 NUM_EPOCHS = 30  # Anggaran awal, bukan jaminan konvergensi.
 NUM_WORKERS = 0  # Mudah ditelusuri dan aman pada CPU/cloud/notebook.
+PIN_MEMORY = False  # Stabil pada Windows CUDA; transfer ke GPU tetap memakai .to(device).
 CPU_NUM_THREADS = 4  # Hindari thread berlebihan pada mesin CPU.
 DETERMINISTIC = True  # Mengurangi sumber variasi; lintas perangkat tetap bisa berbeda.
 
@@ -876,6 +877,24 @@ def dataset_signature(datasets):
     return digest.hexdigest()
 
 
+def _make_training_loaders(train_dataset, val_dataset, batch_size, device, generator):
+    # Pinning adalah optimasi transfer memori CPU, bukan syarat training CUDA.
+    # Default False menghindari kegagalan pemetaan pinned memory pada Windows.
+    pin_memory = config.PIN_MEMORY and device.type == "cuda"
+    train_loader = DataLoader(
+        train_dataset, batch_size=batch_size, shuffle=True, drop_last=False,
+        num_workers=config.NUM_WORKERS, collate_fn=collate_fn,
+        worker_init_fn=seed_worker, generator=generator,
+        pin_memory=pin_memory,
+    )
+    val_loader = DataLoader(
+        val_dataset, batch_size=batch_size, shuffle=False,
+        num_workers=config.NUM_WORKERS, collate_fn=collate_fn,
+        worker_init_fn=seed_worker, pin_memory=pin_memory,
+    )
+    return train_loader, val_loader
+
+
 def train_model(train_dataset, val_dataset, num_epochs=None, checkpoint_dir=None,
                 metrics_dir=None, pretrained=None, resume=None, device=None,
                 batch_size=None):
@@ -918,16 +937,8 @@ def train_model(train_dataset, val_dataset, num_epochs=None, checkpoint_dir=None
 
     seed_everything()
     generator = torch.Generator().manual_seed(config.RANDOM_SEED)
-    train_loader = DataLoader(
-        train_dataset, batch_size=batch_size, shuffle=True, drop_last=False,
-        num_workers=config.NUM_WORKERS, collate_fn=collate_fn,
-        worker_init_fn=seed_worker, generator=generator,
-        pin_memory=device.type == "cuda",
-    )
-    val_loader = DataLoader(
-        val_dataset, batch_size=batch_size, shuffle=False,
-        num_workers=config.NUM_WORKERS, collate_fn=collate_fn,
-        worker_init_fn=seed_worker, pin_memory=device.type == "cuda",
+    train_loader, val_loader = _make_training_loaders(
+        train_dataset, val_dataset, batch_size, device, generator,
     )
     model = build_model(pretrained=bool(pretrained and resume is None)).to(device)
     optimizer = torch.optim.SGD(
@@ -2908,3 +2919,110 @@ outputs/**
 README.md memuat konsep, konfigurasi dan instruksi menjalankan proyek; inputnya pembaca, outputnya panduan. VALIDASI.md memuat hasil checks yang sudah dilaksanakan, dengan batas Linux CPU/dataset sintetis. Dokumen ini memuat sumber serta penjelasannya. Isi lengkap dokumen Markdown dapat dibaca langsung pada masing-masing file.
 
 File .gitkeep di dataset/train, dataset/val, dataset/test, checkpoints, outputs/predictions dan outputs/metrics kosong tanpa kode, input atau output runtime. Fungsinya mempertahankan struktur folder kosong.
+
+## tests/test_memory_transfer.py
+
+Fungsi: pengujian regresi transfer memori DataLoader.
+
+Input: lima pasangan tensor/target CPU dengan ketersediaan accelerator yang disimulasikan.
+
+Output: status unittest untuk jalur pinning aktif, nonaktif, dan CPU.
+
+Bagian penting: allocator pinned-memory dipaksa gagal sebagai kontrol; DataLoader non-pinned tetap mempertahankan semua sampel dan dtype. Tes ini tidak memerlukan atau membuktikan keberhasilan CUDA fisik.
+
+Kode lengkap:
+
+```python
+"""Regresi DataLoader: pinning opsional tanpa memerlukan perangkat CUDA."""
+
+import unittest
+from unittest.mock import patch
+
+import torch
+from torch.utils.data import DataLoader
+
+import config
+from src.train import _make_training_loaders
+
+
+class MemoryTransferTests(unittest.TestCase):
+    def setUp(self):
+        self.samples = [
+            (
+                torch.full((3, 8, 8), float(index), dtype=torch.float32),
+                {
+                    "boxes": torch.tensor([[1., 1., 5., 5.]], dtype=torch.float32),
+                    "labels": torch.tensor([1], dtype=torch.int64),
+                    "image_id": torch.tensor([index], dtype=torch.int64),
+                },
+            )
+            for index in range(5)
+        ]
+
+    def _loaders(self, device):
+        return _make_training_loaders(
+            self.samples, self.samples, 4, torch.device(device),
+            torch.Generator().manual_seed(42),
+        )
+
+    def _assert_all_samples_preserved(self, loaders):
+        for loader_index, loader in enumerate(loaders):
+            self.assertIsInstance(loader, DataLoader)
+            batches = list(loader)
+            self.assertEqual([len(images) for images, _ in batches], [4, 1])
+            image_ids = []
+            for images, targets in batches:
+                self.assertEqual(len(images), len(targets))
+                for image, target in zip(images, targets):
+                    image_id = int(target["image_id"].item())
+                    image_ids.append(image_id)
+                    self.assertEqual(image.dtype, torch.float32)
+                    self.assertEqual(image.device.type, "cpu")
+                    self.assertTrue(torch.equal(image, self.samples[image_id][0]))
+                    self.assertEqual(target["labels"].dtype, torch.int64)
+                    self.assertEqual(target["image_id"].dtype, torch.int64)
+                    self.assertEqual(target["boxes"].dtype, torch.float32)
+                    self.assertTrue(torch.equal(target["boxes"], self.samples[image_id][1]["boxes"]))
+                    self.assertEqual(target["labels"].tolist(), [1])
+            self.assertEqual(sorted(image_ids), list(range(5)))
+            if loader_index == 1:
+                self.assertEqual(image_ids, list(range(5)))
+
+    def test_cuda_loader_without_pinning_keeps_all_samples(self):
+        # Simulate an available accelerator so CPU fallback cannot hide an
+        # accidental request for pinned memory. No tensor is moved to CUDA.
+        with patch.object(config, "PIN_MEMORY", False), \
+                patch.object(config, "NUM_WORKERS", 0), \
+                patch("torch.accelerator.is_available", return_value=True), \
+                patch("torch.accelerator.current_accelerator", return_value=torch.device("cuda")), \
+                patch.object(torch.Tensor, "pin_memory", side_effect=RuntimeError("CUDA error: resource already mapped")) as allocator:
+            self._assert_all_samples_preserved(self._loaders("cuda"))
+            allocator.assert_not_called()
+
+    def test_cuda_pinning_reproduces_injected_allocator_failure(self):
+        # Positive control proves the real DataLoader reaches the failing
+        # allocator when pinning is enabled; training itself is not mocked.
+        with patch.object(config, "PIN_MEMORY", True), \
+                patch.object(config, "NUM_WORKERS", 0), \
+                patch("torch.accelerator.is_available", return_value=True), \
+                patch("torch.accelerator.current_accelerator", return_value=torch.device("cuda")), \
+                patch.object(torch.Tensor, "pin_memory", side_effect=RuntimeError("CUDA error: resource already mapped")) as allocator:
+            for loader in self._loaders("cuda"):
+                before = allocator.call_count
+                with self.assertRaisesRegex(RuntimeError, "resource already mapped"):
+                    next(iter(loader))
+                self.assertGreater(allocator.call_count, before)
+
+    def test_cpu_loader_skips_pinning_even_when_setting_enabled(self):
+        with patch.object(config, "PIN_MEMORY", True), \
+                patch.object(config, "NUM_WORKERS", 0), \
+                patch("torch.accelerator.is_available", return_value=True), \
+                patch("torch.accelerator.current_accelerator", return_value=torch.device("cuda")), \
+                patch.object(torch.Tensor, "pin_memory", side_effect=RuntimeError("CUDA error: resource already mapped")) as allocator:
+            self._assert_all_samples_preserved(self._loaders("cpu"))
+            allocator.assert_not_called()
+
+
+if __name__ == "__main__":
+    unittest.main()
+```

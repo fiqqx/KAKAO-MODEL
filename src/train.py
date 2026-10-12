@@ -56,6 +56,24 @@ def dataset_signature(datasets):
     return digest.hexdigest()
 
 
+def _make_training_loaders(train_dataset, val_dataset, batch_size, device, generator):
+    # Pinning adalah optimasi transfer memori CPU, bukan syarat training CUDA.
+    # Default False menghindari kegagalan pemetaan pinned memory pada Windows.
+    pin_memory = config.PIN_MEMORY and device.type == "cuda"
+    train_loader = DataLoader(
+        train_dataset, batch_size=batch_size, shuffle=True, drop_last=False,
+        num_workers=config.NUM_WORKERS, collate_fn=collate_fn,
+        worker_init_fn=seed_worker, generator=generator,
+        pin_memory=pin_memory,
+    )
+    val_loader = DataLoader(
+        val_dataset, batch_size=batch_size, shuffle=False,
+        num_workers=config.NUM_WORKERS, collate_fn=collate_fn,
+        worker_init_fn=seed_worker, pin_memory=pin_memory,
+    )
+    return train_loader, val_loader
+
+
 def train_model(train_dataset, val_dataset, num_epochs=None, checkpoint_dir=None,
                 metrics_dir=None, pretrained=None, resume=None, device=None,
                 batch_size=None):
@@ -98,16 +116,8 @@ def train_model(train_dataset, val_dataset, num_epochs=None, checkpoint_dir=None
 
     seed_everything()
     generator = torch.Generator().manual_seed(config.RANDOM_SEED)
-    train_loader = DataLoader(
-        train_dataset, batch_size=batch_size, shuffle=True, drop_last=False,
-        num_workers=config.NUM_WORKERS, collate_fn=collate_fn,
-        worker_init_fn=seed_worker, generator=generator,
-        pin_memory=device.type == "cuda",
-    )
-    val_loader = DataLoader(
-        val_dataset, batch_size=batch_size, shuffle=False,
-        num_workers=config.NUM_WORKERS, collate_fn=collate_fn,
-        worker_init_fn=seed_worker, pin_memory=device.type == "cuda",
+    train_loader, val_loader = _make_training_loaders(
+        train_dataset, val_dataset, batch_size, device, generator,
     )
     model = build_model(pretrained=bool(pretrained and resume is None)).to(device)
     optimizer = torch.optim.SGD(
