@@ -4,57 +4,41 @@ skinparam backgroundColor white
 skinparam shadowing false
 skinparam defaultFontName SansSerif
 skinparam defaultFontSize 15
-skinparam ArrowColor #394B40
-skinparam actorBorderColor #394B40
-skinparam actorFontColor #25352C
+skinparam ArrowColor #222222
+skinparam actorBorderColor #222222
+skinparam actorFontColor #222222
 skinparam usecase {
-  BackgroundColor #F7FAF6
-  BorderColor #394B40
-  FontColor #25352C
+  BackgroundColor white
+  BorderColor #222222
+  FontColor #222222
 }
 skinparam rectangle {
   BackgroundColor white
-  BorderColor #394B40
-  FontColor #25352C
+  BorderColor #222222
+  FontColor #222222
 }
-title Use Case - Website Deteksi Biji Kakao
-
+title Use Case Website Deteksi Biji Kakao
 actor "Pengguna" as U
 rectangle "Website Deteksi Biji Kakao" {
-  usecase "Deteksi melalui\nkamera langsung" as CAMERA
-  usecase "Deteksi gambar\nunggahan" as UPLOAD
-  usecase "Deteksi biji kakao" as DETECT
-  usecase "Tampilkan gambar hasil,\ntotal dan jumlah per kelas" as RESULT
-  usecase "Simpan hasil kamera" as SAVE_CAMERA
+  usecase "Deteksi kamera" as CAM
+  usecase "Deteksi gambar unggahan" as UPLOAD
+  usecase "Lihat hasil dan jumlah biji" as RESULT
   usecase "Simpan riwayat" as SAVE
   usecase "Lihat riwayat" as HISTORY
-  usecase "Lihat detail riwayat" as DETAIL
   usecase "Unduh gambar hasil" as DOWNLOAD
-  usecase "Hapus satu riwayat" as DELETE
+  usecase "Hapus riwayat" as DELETE
 }
-
-U -- CAMERA
+U -- CAM
 U -- UPLOAD
-U -- SAVE_CAMERA
+U -- SAVE
 U -- HISTORY
-U -- DETAIL
 U -- DOWNLOAD
 U -- DELETE
-
-CAMERA ..> DETECT : <<include>>
-UPLOAD ..> DETECT : <<include>>
-DETECT ..> RESULT : <<include>>
+CAM ..> RESULT : <<include>>
+UPLOAD ..> RESULT : <<include>>
 UPLOAD ..> SAVE : <<include>>
-SAVE_CAMERA ..> CAMERA : <<extend>>\n[tekan Simpan Hasil]
-SAVE_CAMERA ..> SAVE : <<include>>
-
-HISTORY -[hidden]down-> DETAIL
-DETAIL -[hidden]down-> DOWNLOAD
+SAVE ..> CAM : <<extend>>\n[tekan Simpan Hasil]
+CAM -[hidden]down-> UPLOAD
+HISTORY -[hidden]down-> DOWNLOAD
 DOWNLOAD -[hidden]down-> DELETE
-
-legend bottom
-  include: proses yang selalu menjadi bagian use case, pada alur berhasil.
-  extend: tindakan tambahan saat kondisi tertentu terpenuhi.
-  Satu aktor pengguna; versi awal tanpa login.
-endlegend
 @enduml

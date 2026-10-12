@@ -1,0 +1,14 @@
+digraph System {
+  graph [rankdir=TB, bgcolor="white", fontname="DejaVu Sans", nodesep=0.3, ranksep=0.34, margin=0, pad=0.15, label="Flowchart Sistem Umum", labelloc=t, fontsize=19];
+  node [fontname="DejaVu Sans", fontsize=14, color="#222222", penwidth=1.1, style=filled, fillcolor="white", margin="0.16,0.10", width=3.6];
+  edge [color="#222222", penwidth=1.1, arrowsize=0.75];
+  start [label="Mulai", shape=ellipse, width=1.9];
+  input [label="Input kamera /\nunggah gambar", shape=parallelogram];
+  prep [label="Preprocessing gambar", shape=box];
+  detect [label="Deteksi dan klasifikasi\nSSDLite-MobileNetV3-Large", shape=box];
+  count [label="Filter deteksi dan hitung\ntotal serta jumlah per kelas", shape=box];
+  result [label="Tampilkan gambar\ndan hitungan", shape=parallelogram];
+  history [label="Simpan / lihat riwayat\ndi browser", shape=box];
+  end [label="Selesai", shape=ellipse, width=1.9];
+  start -> input -> prep -> detect -> count -> result -> history -> end;
+}

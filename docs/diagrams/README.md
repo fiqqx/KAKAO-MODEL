@@ -1,51 +1,45 @@
-# Diagram penelitian dan rancangan website biji kakao
+# Rancangan ringkas sistem deteksi biji kakao
 
-Dokumentasi ini menggunakan model resmi SSDLite-MobileNetV3-Large dari TorchVision. Bagian website Flask menggambarkan rancangan deployment yang diminta: kamera browser, unggah gambar, jumlah objek per kelas, serta riwayat.
+Versi ini memakai riwayat browser **localStorage**, maksimal 10 hasil berupa metadata dan thumbnail kecil. Riwayat tersedia pada browser/perangkat yang sama, tanpa SQL atau database server, dan dapat hilang jika data browser dihapus. Unggahan berhasil disimpan otomatis; kamera disimpan ketika tombol Simpan Hasil ditekan.
 
-Untuk menyimpan gambar, buka file PNG dan gunakan tombol unduh atau simpan gambar pada browser. SVG dapat diperbesar tanpa kehilangan ketajaman. Berkas `.puml` merupakan sumber PlantUML yang dapat diedit.
+[Baca prompt implementasi terbaru](PROMPT_FLASK_KAKAO.md).
 
 ## Flowchart sistem secara umum
 
-Alur ini mencakup persiapan data, training, validation, evaluasi test, penggunaan checkpoint terbaik, dan penggunaan website. Training dilakukan sebelum deployment. Website menggunakan checkpoint untuk inferensi.
+![Flowchart sistem ringkas](flowchart_system.png)
 
-![Flowchart sistem secara umum](flowchart_system.png)
+[PNG](flowchart_system.png) · [SVG](flowchart_system.svg) · [Sumber DOT](flowchart_system.dot)
 
-[PNG](flowchart_system.png) · [SVG](flowchart_system.svg) · [Sumber PlantUML](flowchart_system.puml)
+## Flowchart persiapan dan preprocessing data
 
-## Flowchart persiapan dan preprocessing dataset
+![Flowchart preprocessing ringkas](flowchart_preprocessing.png)
 
-Pengambilan foto dan labeling merupakan persiapan data. Pembacaan RGB, konversi bounding box dan tensor, serta transformasi model merupakan preprocessing. Horizontal flip acak hanya diterapkan pada train dan berlangsung saat gambar dibaca untuk training.
+[PNG](flowchart_preprocessing.png) · [SVG](flowchart_preprocessing.svg) · [Sumber DOT](flowchart_preprocessing.dot)
 
-![Flowchart persiapan dan preprocessing dataset](flowchart_preprocessing.png)
-
-[PNG](flowchart_preprocessing.png) · [SVG](flowchart_preprocessing.svg) · [Sumber PlantUML](flowchart_preprocessing.puml)
-
-Pembagian train, validation, dan test memperhatikan kelompok foto sumber/sesi. Semua versi dari foto sumber yang sama berada pada split yang sama. Resize ke 320 × 320 dan normalisasi dilakukan secara internal oleh model TorchVision. Kategori COCO dipetakan berdasarkan nama; ID mentah tidak diasumsikan sama dengan label internal.
+Pengambilan foto dan labeling adalah persiapan data. Split memperhatikan kelompok sumber sebelum augmentasi. Horizontal flip 50% hanya diterapkan pada train saat data dibaca; resize dan normalisasi dilakukan secara internal oleh model.
 
 ## Use case diagram
 
-Aktor utama adalah Pengguna. `include` menggambarkan proses wajib pada alur berhasil, sedangkan `extend` menggambarkan tindakan tambahan pada kondisi tertentu. Menyimpan hasil kamera dilakukan ketika pengguna menekan Simpan Hasil.
-
-![Use case diagram](use_case.png)
+![Use case ringkas](use_case.png)
 
 [PNG](use_case.png) · [SVG](use_case.svg) · [Sumber PlantUML](use_case.puml)
 
-## Activity diagram deteksi
+## Activity diagram
 
-Kamera menampilkan hitungan pada frame terbaru. Unggahan berhasil disimpan otomatis ke riwayat; kamera menyimpan satu snapshot ketika tombol Simpan Hasil ditekan. Akses kamera browser ponsel ke server laptop membutuhkan HTTPS.
-
-![Activity diagram deteksi](activity.png)
+![Activity ringkas](activity.png)
 
 [PNG](activity.png) · [SVG](activity.svg) · [Sumber PlantUML](activity.puml)
 
-## Activity diagram riwayat
+Diagram menampilkan alur inti. Pada kamera, ambil frame–inferensi–hasil berulang hingga Hentikan. Hitungan menunjukkan frame terbaru, tanpa akumulasi antar-frame. Penyimpanan berlangsung di browser, sehingga lajur Sistem mencakup antarmuka JavaScript dan server inferensi Flask.
 
-Riwayat dipisahkan per sesi browser, dengan alur melihat detail, mengunduh hasil, dan menghapus satu item setelah konfirmasi.
+## Wireframe UI/UX
 
-![Activity diagram riwayat](activity_history.png)
+![Ringkasan wireframe](wireframe_board.png)
 
-[PNG](activity_history.png) · [SVG](activity_history.svg) · [Sumber PlantUML](activity_history.puml)
+[Home desktop](wireframe_home_desktop.png) · [Home mobile](wireframe_home_mobile.png) · [Unggah gambar](wireframe_upload_mobile.png) · [Kamera](wireframe_camera_mobile.png) · [Riwayat](wireframe_history_mobile.png)
 
-## Prompt implementasi
+[Board SVG](wireframe_board.svg) · [Wireframe interaktif HTML](UI_WIREFRAME.html)
 
-[Buka prompt notebook dan website Flask](PROMPT_FLASK_KAKAO.md).
+Untuk mencoba wireframe interaktif, unduh `UI_WIREFRAME.html` melalui Raw/Download di GitHub, lalu buka berkas tersebut di browser. Prototipe memakai data contoh untuk navigasi, hasil, dan riwayat. Ini merupakan wireframe; integrasi model Flask dijelaskan dalam prompt implementasi.
+
+Pilihan utama Home adalah Kamera Langsung dan Unggah Gambar. Hasil berada pada halaman deteksi. Navigasi cukup Home dan Riwayat. Contoh angka 20 = 8 + 5 + 7 adalah ilustrasi tampilan.
