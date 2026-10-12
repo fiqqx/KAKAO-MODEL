@@ -1,0 +1,64 @@
+@startuml
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 14
+skinparam ArrowColor #394B40
+skinparam activity {
+  BackgroundColor #F7FAF6
+  BorderColor #394B40
+  FontColor #25352C
+  DiamondBackgroundColor #FFF6E9
+  DiamondBorderColor #806244
+  StartColor #394B40
+  EndColor #394B40
+}
+title Activity - Kamera Langsung dan Unggah Gambar
+start
+:Buka website;
+:Beranda: dua pilihan utama\nKamera Langsung / Unggah Gambar;
+if (Pilih mode?) then (Kamera Langsung)
+  :Tekan Mulai Kamera;\nbrowser meminta izin kamera;
+  if (Kamera dapat digunakan?) then (Ya)
+    :Aktifkan kamera belakang;
+    repeat
+      :Ambil satu frame; kirim ke Flask;\ntunggu request sebelumnya selesai;
+      :Inferensi SSDLite; filter prediksi;\nhitung total dan jumlah per kelas;
+      if (Inferensi berhasil?) then (Ya)
+        :Tampilkan gambar hasil dan hitungan\nberdasarkan frame terbaru;
+        if (Tekan Simpan Hasil?) then (Ya)
+          :Simpan snapshot dan hasil yang sama\nke berkas dan SQLite untuk sesi ini;
+          :Tampilkan status berhasil disimpan;
+        else (Tidak)
+        endif
+      else (Tidak)
+        :Tampilkan pesan gagal mendeteksi;
+      endif
+    repeat while (Kamera masih aktif?) is (Ya) not (Tidak)
+    :Hentikan track kamera\ndan pengiriman frame;
+  else (Tidak)
+    :Tampilkan petunjuk izin / HTTPS;\ntawarkan unggah gambar;
+  endif
+else (Unggah Gambar)
+  :Pilih gambar dan lihat pratinjau;\ntekan Deteksi;
+  :Validasi ukuran dan isi berkas;\ndekode dan koreksi orientasi;
+  if (Gambar valid?) then (Ya)
+    :Inferensi SSDLite; filter prediksi;\nhitung total dan jumlah per kelas;
+    if (Inferensi berhasil?) then (Ya)
+      :Simpan gambar hasil dan satu riwayat\nke SQLite untuk sesi ini;
+      :Tampilkan gambar dengan box,\nlabel, confidence, dan hitungan;
+    else (Tidak)
+      :Tampilkan pesan gagal;\nberi pilihan mencoba kembali;
+    endif
+  else (Tidak)
+    :Tampilkan alasan;\nberi pilihan mengganti gambar;
+  endif
+endif
+:Kembali ke beranda atau buka Riwayat\n(lihat activity diagram riwayat);
+stop
+legend bottom
+  Hitungan kamera = objek pada frame terbaru, tanpa akumulasi antar-frame.
+  Kamera disimpan hanya saat Simpan Hasil; unggahan otomatis setelah berhasil.
+  Gambar valid tanpa deteksi tetap berhasil, dengan total 0.
+endlegend
+@enduml

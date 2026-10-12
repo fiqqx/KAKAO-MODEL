@@ -1,0 +1,62 @@
+@startuml
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 14
+skinparam ArrowColor #394B40
+skinparam activity {
+  BackgroundColor #F7FAF6
+  BorderColor #394B40
+  FontColor #25352C
+  DiamondBackgroundColor #FFF6E9
+  DiamondBorderColor #806244
+  StartColor #394B40
+  EndColor #394B40
+}
+title Flowchart Persiapan dan Preprocessing Dataset
+start
+partition "A. Pengambilan dan anotasi data" {
+  :Ambil foto biji kakao\ncatat sumber dan kelas fermentasinya;
+  :Pilih gambar yang layak\nbuang gambar rusak dan duplikat;
+  :Unggah gambar ke Roboflow;
+  repeat
+    :Buat bounding box setiap biji\nberi label kelas fermentasi;
+    :Periksa posisi box, kelas,\ndan biji yang belum dilabeli;
+  repeat while (Anotasi perlu diperbaiki?) is (Ya) not (Tidak)
+  :Kelompokkan gambar berdasarkan\nfoto sumber atau sesi pengambilan;
+  :Pisahkan train, validation, dan test\nsatu kelompok tetap pada satu split\njaga keterwakilan ketiga kelas;
+}
+partition "B. Ekspor dan validasi dataset" {
+  repeat
+    :Ekspor format COCO JSON\nsimpan gambar dan anotasi tiap split;
+    :Tempatkan dalam folder\ndataset/train, dataset/val, dataset/test;
+    :Audit gambar, kategori dan bounding box\nperiksa duplikasi identik antar-split;
+    if (Ada kesalahan?) then (Ya)
+      :Perbaiki anotasi, berkas,\natau pemisahan dataset;
+    else (Tidak)
+    endif
+  repeat while (Audit belum lulus?) is (Ya) not (Tidak)
+}
+partition "C. Preprocessing saat data dibaca" {
+  :Baca gambar dalam format RGB;
+  :Petakan nama kategori COCO\nke label internal 1, 2, dan 3;
+  :Ubah bounding box\ndari xywh menjadi xyxy;
+  :Konversi gambar menjadi tensor\nRGB dengan nilai 0 sampai 1;
+  if (Data berasal dari train?) then (Ya)
+    :Horizontal flip acak dengan peluang 0.5\nsesuaikan bounding box;
+  else (Validation / test)
+    :Gunakan gambar tanpa augmentasi acak;
+  endif
+  :Bentuk batch menggunakan\nDataLoader dan collate_fn;
+  :Transformasi internal model:\nnormalisasi dan resize 320 x 320;
+  :Input siap untuk training\natau evaluasi model;
+}
+stop
+legend bottom
+  Tiga kelas: Tidak Fermentasi, Setengah Fermentasi, dan Full Fermentasi.
+  Label internal 0 adalah background; ID asli COCO dipetakan berdasarkan nama.
+  Augmentasi hanya pada train, dilakukan saat dibaca tanpa menambah file gambar.
+  Varian dari foto sumber yang sama harus tetap pada split yang sama.
+  Normalisasi dan resize dilakukan model; koordinat bounding box ikut disesuaikan.
+endlegend
+@enduml

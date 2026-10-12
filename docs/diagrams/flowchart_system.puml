@@ -1,0 +1,73 @@
+@startuml
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 14
+skinparam ArrowColor #394B40
+skinparam activity {
+  BackgroundColor #F7FAF6
+  BorderColor #394B40
+  FontColor #25352C
+  DiamondBackgroundColor #FFF6E9
+  DiamondBorderColor #806244
+  StartColor #394B40
+  EndColor #394B40
+}
+title Flowchart Sistem secara Umum
+start
+partition "A. Penelitian dan penyediaan model" {
+  :Ambil foto, lakukan labeling,\ndan siapkan COCO train / val / test;
+  note right
+    Rincian tersedia pada
+    flowchart preprocessing.
+  end note
+  :Audit dataset dan siapkan DataLoader;
+  :Muat SSDLite-MobileNetV3-Large pretrained\nubah head menjadi 3 kelas + background;
+  repeat
+    :Training satu epoch pada train;
+    :Evaluasi validation\nsimpan checkpoint jika mAP terbaik;
+  repeat while (Masih ada epoch?) is (Ya) not (Tidak)
+  :Muat checkpoint terbaik\npilih confidence menggunakan validation;
+  :Evaluasi akhir pada test\nsimpan metrik dan grafik;
+}
+partition "B. Penggunaan website Flask" {
+  :Jalankan Flask\nmuat checkpoint sekali ke mode evaluasi;
+  :Pengguna membuka website;
+  if (Pilih cara deteksi?) then (Kamera)
+    :Tekan Mulai Kamera\nminta izin kamera browser;
+    if (Kamera dapat digunakan?) then (Ya)
+      repeat
+        :Ambil frame terbaru\nkirim setelah request sebelumnya selesai;
+        :Preprocessing dan inferensi\nfilter deteksi dan hitung per kelas;
+        :Tampilkan frame dengan bounding box, confidence,\ntotal dan jumlah per kelas;
+        if (Tekan Simpan Hasil?) then (Ya)
+          :Simpan snapshot yang ditampilkan\nbeserta hitungan ke riwayat sesi;
+        else (Tidak)
+        endif
+      repeat while (Kamera masih aktif?) is (Ya) not (Tidak)
+      :Hentikan kamera dan pengiriman frame;
+    else (Tidak)
+      :Tampilkan petunjuk izin / HTTPS\ntawarkan unggah gambar;
+    endif
+  else (Unggah gambar)
+    :Pilih gambar dan tekan Deteksi;
+    :Validasi berkas, dekode gambar,\ndan koreksi orientasi;
+    if (Gambar valid?) then (Ya)
+      :Preprocessing dan inferensi\nfilter deteksi dan hitung per kelas;
+      :Tampilkan gambar dengan bounding box, confidence,\ntotal dan jumlah per kelas;
+      :Simpan hasil unggahan otomatis\nke riwayat sesi;
+    else (Tidak)
+      :Tampilkan kesalahan\npengguna dapat mengganti gambar;
+    endif
+  endif
+  :Pengguna dapat melihat riwayat,\nmengunduh hasil atau menghapusnya;
+}
+stop
+legend bottom
+  Website menggunakan model yang sudah dilatih; membuka website tidak memulai training.
+  Hitungan kamera hanya untuk frame terbaru, tanpa akumulasi antar-frame.
+  Total = Tidak Fermentasi + Setengah Fermentasi + Full Fermentasi.
+  Confidence awal 0.20 dipilih dari validation; test digunakan untuk pelaporan akhir.
+  Inferensi gagal tidak disimpan sebagai hasil berhasil; hasil valid tanpa objek = 0.
+endlegend
+@enduml

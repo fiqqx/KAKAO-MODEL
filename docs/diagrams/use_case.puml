@@ -1,0 +1,60 @@
+@startuml
+left to right direction
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 15
+skinparam ArrowColor #394B40
+skinparam actorBorderColor #394B40
+skinparam actorFontColor #25352C
+skinparam usecase {
+  BackgroundColor #F7FAF6
+  BorderColor #394B40
+  FontColor #25352C
+}
+skinparam rectangle {
+  BackgroundColor white
+  BorderColor #394B40
+  FontColor #25352C
+}
+title Use Case - Website Deteksi Biji Kakao
+
+actor "Pengguna" as U
+rectangle "Website Deteksi Biji Kakao" {
+  usecase "Deteksi melalui\nkamera langsung" as CAMERA
+  usecase "Deteksi gambar\nunggahan" as UPLOAD
+  usecase "Deteksi biji kakao" as DETECT
+  usecase "Tampilkan gambar hasil,\ntotal dan jumlah per kelas" as RESULT
+  usecase "Simpan hasil kamera" as SAVE_CAMERA
+  usecase "Simpan riwayat" as SAVE
+  usecase "Lihat riwayat" as HISTORY
+  usecase "Lihat detail riwayat" as DETAIL
+  usecase "Unduh gambar hasil" as DOWNLOAD
+  usecase "Hapus satu riwayat" as DELETE
+}
+
+U -- CAMERA
+U -- UPLOAD
+U -- SAVE_CAMERA
+U -- HISTORY
+U -- DETAIL
+U -- DOWNLOAD
+U -- DELETE
+
+CAMERA ..> DETECT : <<include>>
+UPLOAD ..> DETECT : <<include>>
+DETECT ..> RESULT : <<include>>
+UPLOAD ..> SAVE : <<include>>
+SAVE_CAMERA ..> CAMERA : <<extend>>\n[tekan Simpan Hasil]
+SAVE_CAMERA ..> SAVE : <<include>>
+
+HISTORY -[hidden]down-> DETAIL
+DETAIL -[hidden]down-> DOWNLOAD
+DOWNLOAD -[hidden]down-> DELETE
+
+legend bottom
+  include: proses yang selalu menjadi bagian use case, pada alur berhasil.
+  extend: tindakan tambahan saat kondisi tertentu terpenuhi.
+  Satu aktor pengguna; versi awal tanpa login.
+endlegend
+@enduml
