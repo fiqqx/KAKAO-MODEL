@@ -1,0 +1,12 @@
+.venv/
+.cache/
+__pycache__/
+*.py[cod]
+dataset/**
+!dataset/**/
+!dataset/**/.gitkeep
+checkpoints/**
+!checkpoints/.gitkeep
+outputs/**
+!outputs/**/
+!outputs/**/.gitkeep
