@@ -1,4 +1,0 @@
-# Tambahan website; gunakan PyTorch GPU yang sudah ada pada .venv proyek.
-Flask==3.1.2
-waitress==3.0.2
-pillow-heif==1.1.1
