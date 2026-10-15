@@ -65,3 +65,40 @@ penyimpanan/restore checkpoint dan kesetaraan resume. Ini menguji software
 dan penanganan jalur alokasi memori; CUDA/driver Windows fisik belum diuji
 di cloud. Keberhasilan pada mesin pengguna perlu dibuktikan melalui retry
 setelah perbaikan.
+
+## Notebook dan website Flask — 15 Oktober 2026
+
+Suite gabungan terbaru: **43 pengujian lulus, 0 gagal, 0 skipped** pada Linux
+CPU. Tujuh pengujian backend baru memeriksa kesamaan box/hitungan, hasil nol
+yang valid, kegagalan inferensi, checkpoint hilang, orientasi EXIF, batas input,
+serta server notebook yang dapat dihentikan dan memakai ulang port yang sama.
+Worker dan thread server ikut ditutup.
+
+`KAKAO_LENGKAP.ipynb` lolos validasi nbformat dan eksekusi seluruh sel dengan
+kernel IPython sesungguhnya. Sel integrasi sementara membuktikan Run All
+tidak menjalankan server/training, pemilihan checkpoint eksplisit, tombol
+start, health melalui HTTP, start berulang tanpa server ganda, dan stop.
+Notebook yang dikirim tetap memiliki output kosong dan execution count null.
+
+Pemuatan arsitektur SSDLite asli dari checkpoint sementara dan inferensi API
+berhasil untuk PNG serta HEIF. Gambar hasil dapat didekode dan ukurannya cocok;
+jumlah box, label, score, total, dan jumlah setiap kelas konsisten. Bobot pada
+uji ini diinisialisasi acak untuk memeriksa jalur software, bukan bobot kakao
+terlatih. Smoke pretrained training/evaluasi/prediksi/resume juga lulus kembali.
+
+Pengujian Chromium dengan API Flask dan detector terkontrol mencakup:
+
+- Unggahan tiga kelas, hasil nol, berkas rusak, unduhan gambar, serta gambar dan
+  hitungan dari hasil yang sama.
+- Penyimpanan riwayat otomatis, refresh, detail/hapus, batas 10 hasil,
+  penyimpanan penuh, dan JSON riwayat rusak.
+- Kamera simulasi: frame terbaru, satu request aktif, tidak otomatis menyimpan
+  setiap frame, simpan manual, stop seluruh track, respons terlambat diabaikan,
+  dan izin kamera ditolak.
+- Navigasi serta pemeriksaan overflow horizontal pada ukuran layar desktop
+  dan ponsel.
+
+`pip check` lulus. Paket web/notebook dipasang terpisah dari requirements model,
+tanpa mengganti build PyTorch. Launcher Windows ditinjau statis; menjalankan
+BAT, GPU NVIDIA lokal, checkpoint terlatih pengguna, dan kamera fisik
+Android/iPhone belum diuji di cloud. Akses kamera ponsel memerlukan HTTPS.

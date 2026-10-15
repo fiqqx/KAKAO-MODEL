@@ -1,5 +1,17 @@
 # Deteksi dan klasifikasi tingkat fermentasi biji kakao
 
+**Jalankan melalui notebook tanpa mengetik perintah terminal:** buka
+[KAKAO_LENGKAP.ipynb](KAKAO_LENGKAP.ipynb), pilih kernel `.venv`, lalu jalankan
+sel 1–4 dan pilih checkpoint pada panel website. Panduan langkah demi langkah
+ada di [README_NOTEBOOK.md](README_NOTEBOOK.md). Bila kernel belum tersedia,
+klik dua kali `SIAPKAN_NOTEBOOK_WINDOWS.bat` pada folder proyek yang sudah
+memiliki `.venv`.
+
+Notebook menyediakan website Flask dengan kamera, unggahan gambar, hitungan
+ketiga kelas, dan riwayat `localStorage` browser tanpa database. Bagian
+penelitian tersedia sebagai sel opsional; membuka notebook tidak mengulang
+training. Dataset dan checkpoint lokal tetap diperlukan untuk eksperimen nyata.
+
 Proyek skripsi menggunakan **SSDLite-MobileNetV3-Large** resmi TorchVision,
 `torchvision.models.detection.ssdlite320_mobilenet_v3_large`.
 Satu gambar dapat berisi banyak biji; setiap objek menghasilkan bounding box,

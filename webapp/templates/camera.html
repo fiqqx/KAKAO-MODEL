@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Kamera Langsung · Deteksi Kakao{% endblock %}
+{% block content %}
+<a class="back-link" href="/">← Kembali ke Home</a>
+<div class="page-heading"><div><span class="eyebrow">DETEKSI DARI KAMERA</span><h1>Kamera Langsung</h1></div><span class="mode-badge"><svg class="icon"><use href="#icon-camera"/></svg>Kamera</span></div>
+<p class="page-description">Arahkan kamera ke biji kakao. Hitungan mengikuti gambar terbaru, tanpa dijumlahkan antar-frame.</p>
+<div id="error-message" class="notice notice-error" role="alert" hidden></div>
+<div class="detection-layout">
+  <section class="panel image-panel" aria-label="Kamera dan hasil deteksi">
+    <div class="panel-heading"><h2>Kamera perangkat</h2><span id="camera-status" class="small-label">Nonaktif</span></div>
+    <div class="image-stage camera-stage">
+      <div id="camera-placeholder" class="empty-preview"><span class="empty-icon"><svg class="icon"><use href="#icon-camera"/></svg></span><h3>Siap melihat lebih dekat?</h3><p>Mulai kamera dan izinkan akses kamera<br>pada perangkat Anda.</p></div>
+      <video id="camera-video" autoplay muted playsinline hidden aria-label="Pratinjau kamera sebelum hasil pertama"></video>
+      <img id="result-image" alt="Frame hasil deteksi kamera terbaru" hidden>
+    </div>
+    <div class="button-row"><button id="start-camera" class="button button-primary" type="button">Mulai Kamera</button><button id="stop-camera" class="button button-secondary" type="button" disabled>Hentikan</button></div>
+    <p id="page-status" class="status-message" role="status" aria-live="polite">Kamera belum aktif.</p>
+  </section>
+  <aside class="result-column" aria-label="Ringkasan hasil kamera">
+    <div class="section-label"><h2>Hasil frame terbaru</h2><span id="result-status" class="small-label">Menunggu kamera</span></div>
+    <div class="stats-grid" id="detection-stats">
+      <article class="stat-card stat-total"><span>Total Biji Terdeteksi</span><strong data-count="total">—</strong></article>
+      <article class="stat-card"><span><i class="class-dot class-no"></i>Tidak Fermentasi</span><strong data-count="Tidak Fermentasi">—</strong></article>
+      <article class="stat-card"><span><i class="class-dot class-half"></i>Setengah Fermentasi</span><strong data-count="Setengah Fermentasi">—</strong></article>
+      <article class="stat-card"><span><i class="class-dot class-full"></i>Full Fermentasi</span><strong data-count="Full Fermentasi">—</strong></article>
+    </div>
+    <div class="result-actions"><button id="save-result" class="button button-primary" type="button" disabled><svg class="icon"><use href="#icon-check"/></svg>Simpan Hasil</button><button id="download-result" class="button button-secondary" type="button" disabled><svg class="icon"><use href="#icon-download"/></svg>Unduh Hasil</button></div>
+    <p class="help-text"><svg class="icon"><use href="#icon-info"/></svg>Simpan satu hasil yang sedang ditampilkan ke riwayat browser Anda.</p>
+    <p class="camera-help">Kamera ponsel memerlukan koneksi HTTPS. Jika kamera tidak tersedia, Anda tetap dapat <a href="/upload">mengunggah gambar</a>.</p>
+  </aside>
+</div>
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ url_for('static', filename='js/camera.js') }}"></script>{% endblock %}

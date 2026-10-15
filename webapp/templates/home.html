@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Home · Deteksi Kakao{% endblock %}
+{% block content_class %}home-content{% endblock %}
+{% block content %}
+<section class="home-intro">
+  <span class="eyebrow">PILIH CARA DETEKSI</span>
+  <h1>Deteksi Biji Kakao<span class="title-dot">.</span></h1>
+  <p class="lead">Kenali kelas fermentasi dan jumlah biji melalui kamera atau foto.</p>
+</section>
+<section class="mode-grid" aria-label="Pilihan deteksi">
+  <article class="mode-card">
+    <div class="mode-card-top"><span class="mode-icon"><svg class="icon"><use href="#icon-camera"/></svg></span><span class="mode-step">01</span></div>
+    <h2>Kamera Langsung</h2>
+    <p>Gunakan kamera perangkat untuk melihat hasil deteksi secara langsung.</p>
+    <a class="button button-primary" href="/camera">Buka Kamera<svg class="icon"><use href="#icon-arrow"/></svg></a>
+  </article>
+  <article class="mode-card">
+    <div class="mode-card-top"><span class="mode-icon cocoa"><svg class="icon"><use href="#icon-image"/></svg></span><span class="mode-step">02</span></div>
+    <h2>Unggah Gambar</h2>
+    <p>Pilih foto biji kakao dari galeri perangkat Anda, lalu lihat hasilnya.</p>
+    <a class="button button-primary" href="/upload">Pilih Gambar<svg class="icon"><use href="#icon-arrow"/></svg></a>
+  </article>
+</section>
+<p class="storage-note"><svg class="icon"><use href="#icon-info"/></svg>Riwayat tersedia pada browser perangkat ini.</p>
+<div class="home-hint"><span class="hint-mark"><svg class="icon"><use href="#icon-bean"/></svg></span><p><strong>Foto yang jelas, hasil yang lebih mudah diperiksa.</strong><br>Gunakan pencahayaan merata dan usahakan setiap biji terlihat utuh.</p></div>
+{% endblock %}
