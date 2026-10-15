@@ -1,16 +1,23 @@
 # Deteksi dan klasifikasi tingkat fermentasi biji kakao
 
-**Jalankan melalui notebook tanpa mengetik perintah terminal:** buka
-[KAKAO_LENGKAP.ipynb](KAKAO_LENGKAP.ipynb), pilih kernel `.venv`, lalu jalankan
-sel 1–4 dan pilih checkpoint pada panel website. Panduan langkah demi langkah
-ada di [README_NOTEBOOK.md](README_NOTEBOOK.md). Bila kernel belum tersedia,
-klik dua kali `SIAPKAN_NOTEBOOK_WINDOWS.bat` pada folder proyek yang sudah
-memiliki `.venv`.
+**Mulai penelitian dari dataset Roboflow melalui satu notebook:** buka
+[KAKAO_TRAINING_DARI_NOL.ipynb](KAKAO_TRAINING_DARI_NOL.ipynb).
+Semua kode utama berada langsung di dalam sel `.ipynb`: instalasi, audit COCO,
+preprocessing, augmentasi, transfer learning, training, grafik, evaluasi, dan
+prediksi foto baru. Notebook ini mandiri: cukup salin file tersebut ke folder
+baru bersama dataset, pilih kernel Python 3.12 di VS Code, lalu jalankan sel
+berurutan dengan tombol ▶. Tidak memerlukan `src/`, `config.py`, `.bat`, atau
+perintah terminal. Petunjuk lengkap terdapat di awal notebook.
 
-Notebook menyediakan website Flask dengan kamera, unggahan gambar, hitungan
-ketiga kelas, dan riwayat `localStorage` browser tanpa database. Bagian
-penelitian tersedia sebagai sel opsional; membuka notebook tidak mengulang
-training. Dataset dan checkpoint lokal tetap diperlukan untuk eksperimen nyata.
+Training membuat eksperimen baru menggunakan pretrained COCO resmi, tanpa
+checkpoint kakao lama. Konfigurasi awal 100 epoch; setiap run memiliki folder
+hasil sendiri. Test hanya dijalankan setelah pemilihan model/threshold final
+dari validation. Dataset dan hasil training tidak disertakan dalam GitHub.
+
+Untuk **website dengan model yang sudah selesai dilatih**, tersedia notebook
+terpisah [KAKAO_LENGKAP.ipynb](KAKAO_LENGKAP.ipynb), dengan panduan
+[README_NOTEBOOK.md](README_NOTEBOOK.md). Notebook website memerlukan folder
+aplikasi proyek; notebook training mandiri di atas tidak memerlukannya.
 
 Proyek skripsi menggunakan **SSDLite-MobileNetV3-Large** resmi TorchVision,
 `torchvision.models.detection.ssdlite320_mobilenet_v3_large`.

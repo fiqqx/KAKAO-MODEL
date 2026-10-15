@@ -102,3 +102,36 @@ Pengujian Chromium dengan API Flask dan detector terkontrol mencakup:
 tanpa mengganti build PyTorch. Launcher Windows ditinjau statis; menjalankan
 BAT, GPU NVIDIA lokal, checkpoint terlatih pengguna, dan kamera fisik
 Android/iPhone belum diuji di cloud. Akses kamera ponsel memerlukan HTTPS.
+
+## Notebook penelitian mandiri dari COCO — 15 Oktober 2026
+
+`KAKAO_TRAINING_DARI_NOL.ipynb` berisi 34 sel (20 sel kode), dengan seluruh
+definisi dataset, transformasi, model, training, evaluasi, dan prediksi langsung
+di dalam notebook. Tidak mengimpor `src`, `config`, atau pipeline proyek.
+Validasi nbformat, kompilasi seluruh sel, dan pemeriksaan output kosong lulus.
+Default tetap pretrained COCO, eksperimen baru, 100 epoch; test final opt-in.
+
+Notebook dieksekusi menggunakan kernel IPython sesungguhnya dalam folder
+sementara yang hanya berisi dataset sintetis dan cache bobot pretrained;
+folder `src` maupun aplikasi tidak ada. Untuk pengujian, build diubah ke CPU,
+epoch ke 1, batch ke 2, serta test final diaktifkan pada salinan eksekusi.
+Sebanyak 35 sel termasuk sel integrasi sementara selesai tanpa error sel.
+
+Alur yang berhasil dijalankan: audit 3 train/1 validation/1 test, pemetaan ID
+COCO berbeda antar split, gambar/flip bbox, DataLoader, transfer learning
+resmi, singleton BatchNorm, training, best/last checkpoint, CSV/JSON, grafik,
+pemuatan best, confidence sweep validation, AP/PR/F1 per kelas, test final,
+prediksi gambar baru, dan penyimpanan hasil termasuk deteksi kosong.
+
+Resume 1→2 epoch dibandingkan dengan training 2 epoch tanpa interupsi memakai
+dataset yang sama. Riwayat dan seluruh tensor bobot cocok dalam toleransi
+numerik yang diuji (rtol/atol 1e-5; selisih bobot maksimum pada eksekusi ini
+2.39e-7). Eksperimen baru menghasilkan folder berbeda; resume memakai folder
+asal. Uji komponen juga memeriksa bbox/label saat flip, kategori tak dikenal,
+target kosong, path keluar folder, kebocoran gambar identik, pencocokan
+duplikat/salah kelas, AP kelas tanpa anotasi, serta pemulihan mode model.
+
+Ini validasi program memakai gambar sintetis, bukan hasil penelitian kakao.
+Training 100 epoch pada dataset asli, instalasi baru Windows, dan GPU lokal
+belum dijalankan di cloud. Notebook yang dipublikasikan tidak memuat bobot,
+dataset, output eksekusi, atau angka uji sintetis sebagai hasil penelitian.

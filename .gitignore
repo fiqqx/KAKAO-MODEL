@@ -2,6 +2,7 @@
 .cache/
 __pycache__/
 *.py[cod]
+hasil_penelitian/
 dataset/**
 !dataset/**/
 !dataset/**/.gitkeep

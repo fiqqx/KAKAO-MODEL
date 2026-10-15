@@ -1,5 +1,10 @@
 # Notebook Deteksi Kakao tanpa perintah terminal
 
+Untuk **memulai training dari dataset mentah COCO Roboflow dengan seluruh kode
+langsung dalam notebook**, gunakan notebook mandiri
+[KAKAO_TRAINING_DARI_NOL.ipynb](KAKAO_TRAINING_DARI_NOL.ipynb).
+Panduan di halaman ini membahas notebook website untuk model yang sudah dilatih.
+
 Gunakan **`KAKAO_LENGKAP.ipynb`** untuk menjalankan website Flask dari tombol notebook, atau menjelaskan tahap penelitian saat sidang. Notebook menggunakan model yang sudah Anda latih. Training ulang tidak diperlukan untuk membuka website.
 
 ## Persiapan satu kali di Windows
